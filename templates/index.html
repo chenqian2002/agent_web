@@ -1,0 +1,70 @@
+<!DOCTYPE html> 
+<html lang="zh-CN">
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="utf-8">
+    <title>ai-agent 个人网站</title>
+
+
+</head>
+<body>
+    
+    <div class="container">
+    <nav>
+        <div class="logo">🤖 AI Agent</div>
+        <div>
+            <a href="/">首页</a>
+            <a href="/chat">聊天</a>
+            <a href="/docsqa">文件问答</a>
+            <a href="/about">关于我</a>
+
+    </nav>
+    
+    <!-- 用 card 包住主要内容 -->
+    <div class="card">
+        <h1>🔍 AI 搜索助手</h1>
+        <p class="subtitle">输入问题，让 AI Agent 帮你搜索答案</p>
+        
+        <form action="/search" method="post" class="search-box">
+            <input class="search-input" type="text" name="query" placeholder="输入你想搜索的内容..." required>
+            <button type="submit" class="search-btn">搜索</button>
+        </form>
+        
+        <div class="result-box">
+            <h3>📋 搜索结果</h3>
+            <div class="result-content">
+                {% if result %}
+                    <pre>{{ result }}</pre>
+                {% else %}
+                    <p class="placeholder">👆 在上方输入问题开始搜索</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    </div>
+    
+    <div id="loading" class="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>🔍 正在搜索...</p>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2026 AI Agent 个人网站 | Made with ❤️</p>
+        <div>
+            <a href="/">首页</a>
+            <a href="/chat">聊天</a>
+            <a href="/docsqa">文件问答</a>
+            <a href="/about">关于我</a>
+
+    </footer>
+    
+    <script src="/static/script.js"></script>
+    
+</body>
+
+
+</html>
+
+

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>知識庫問答 (RAG) | DocsQA</title>
+    <script src="/static/script.js"></script> 
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 24px;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+        .hint {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .btn-secondary:hover { background: #cbd5e1; }
+        #answer {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            min-height: 24px;
+        }
+        #answer.loading { color: #64748b; }
+        .sources {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .sources h3 {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .source-item {
+            font-size: 0.85rem;
+            color: #475569;
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            white-space: pre-wrap;
+        }
+        .source-item strong { color: #334155; }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 10;
+            display: none;
+        }
+        .toast.success { background: #10b981; color: #fff; }
+        .toast.error { background: #ef4444; color: #fff; }
+    </style>
+</head>
+<body>
+    <h1>知識庫問答 (RAG)</h1>
+    <p class="hint">基於 LangChain 與 Qwen：請先將 .txt 文件放入 <code>agent_web/docs</code>，點擊「重建索引」後再提問。</p>
+
+    <div class="panel">
+        <label for="question">輸入問題</label>
+        <textarea id="question" placeholder="例如：這份文件的主要內容是什麼？"></textarea>
+        <div class="btns">
+            <button class="btn-primary" onclick="ask()">提交問題</button>
+            <button class="btn-secondary" onclick="buildIndex()">重建索引</button>
+            <input type="file" id="docFile" accept=".txt" />
+            <button class="btn-secondary" onclick="uploadAndAsk()">上傳文件並提問</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <label>回答</label>
+        <div id="answer"></div>
+        <div class="sources" id="sourcesWrap" style="display:none;">
+            <h3>參考段落</h3>
+            <div id="sources"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const questionEl = document.getElementById("question");
+        const answerEl = document.getElementById("answer");
+        const sourcesEl = document.getElementById("sources");
+        const sourcesWrap = document.getElementById("sourcesWrap");
+        const toastEl = document.getElementById("toast");
+
+        function showToast(msg, type) {
+            toastEl.textContent = msg;
+            toastEl.className = "toast " + (type || "success");
+            toastEl.style.display = "block";
+            setTimeout(function () {
+                toastEl.style.display = "none";
+            }, 3000);
+        }
+
+        async function ask() {
+            const q = questionEl.value.trim();
+            if (!q) {
+                showToast("請先輸入問題", "error");
+                return;
+            }
+            answerEl.textContent = "正在查詢知識庫…";
+            answerEl.classList.add("loading");
+            sourcesWrap.style.display = "none";
+            sourcesEl.innerHTML = "";
+
+            try {
+                const resp = await fetch("/api/docsqa", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: q })
+                });
+                const data = await resp.json();
+                answerEl.textContent = data.answer || "(無回應)";
+                answerEl.classList.remove("loading");
+
+                if (data.sources && data.sources.length > 0) {
+                    sourcesWrap.style.display = "block";
+                    sourcesEl.innerHTML = data.sources.map(function (s, i) {
+                        return '<div class="source-item"><strong>[' + (i + 1) + '] ' + (s.source || "文件") + '</strong>\n' + (s.content || "") + '</div>';
+                    }).join("");
+                }
+            } catch (err) {
+                answerEl.textContent = "請求失敗：" + err.message;
+                answerEl.classList.remove("loading");
+                showToast("請求失敗", "error");
+            }
+        }
+
+        async function buildIndex() {
+            toastEl.textContent = "正在重建索引…";
+            toastEl.className = "toast";
+            toastEl.style.display = "block";
+            try {
+                const resp = await fetch("/api/docsqa/build", { method: "POST" });
+                const data = await resp.json();
+                if (data.ok) {
+                    showToast(data.message || "索引建立成功");
+                } else {
+                    showToast(data.message || "建立失敗", "error");
+                }
+            } catch (err) {
+                showToast("請求失敗：" + err.message, "error");
+            }
+        }
+    </script>
+</body>
+</html>

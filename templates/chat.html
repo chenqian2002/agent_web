@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 聊天 - AI Agent 个人网站</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo">🤖 AI Agent</div>
+            <div>
+                <a href="/">首页</a>
+                <a href="/chat">聊天</a>
+                <a href="/docsqa">文件问答</a>
+                <a href="/about">关于我</a>
+            </div>
+        </nav>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>💬 AI 智能助手</h1>
+                <p>有什么问题都可以问我，我会联网帮你查找答案</p>
+            </div>
+            
+            <div id="chat-messages" class="chat-messages">
+                <div class="message bot">
+                    <div class="message-content">
+                        👋 你好！我是 AI 助手，有什么可以帮你的吗？
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-box">
+                <input type="text" id="user-input" placeholder="输入你的问题..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2026 AI Agent 个人网站 | Made with ❤️</p>
+        </footer>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>

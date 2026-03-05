@@ -243,7 +243,9 @@ async def docsqa_build():
 
 @app.post("/api/chat")
 async def chat_api(data: ChatRequest):
-# 1. 定义系统提示词 (Persona)
+    """聊天 API - AI 自己决定是否搜索"""
+    
+    # 1. 定义系统提示词
     system_prompt = (
         "你是一个专业的网站智能客服。"
         "1. 如果用户问公司内部业务或文档内容，优先使用 lookup_knowledge_base 工具。"
@@ -251,43 +253,71 @@ async def chat_api(data: ChatRequest):
         "3. 如果是打招呼，直接礼貌回复。"
         "请用亲切、专业的语气回答。"
     )
-    messages=[{"role":"system","content":system_prompt}]
+    
+    messages = [{"role": "system", "content": system_prompt}]
     messages.extend(data.history)
     messages.append({"role": "user", "content": data.message})
 
-
-    """聊天 API - AI 自己决定是否搜索"""
-    
     try:
-        #第一次调用ai判断是否搜索
-        response=client.chat.completions.create(
+        # --- 第一轮：让 AI 思考 ---
+        response = client.chat.completions.create(
             model="qwen3-max",
             messages=messages,
             tools=tool_schema
         )
-        msg=response.choices[0].message
-        #如果ai决定搜索
+        msg = response.choices[0].message
+        
+        # --- 判断 AI 是否想调用工具 ---
         if msg.tool_calls:
-            print("🤖 AI 决定要搜索！")
-            tool_call=msg.tool_calls[0]
-            args=json.loads(tool_call.function.arguments)
-            search_result =search_google(args["query"])
+            print("🤖 AI 决定调用工具...")
+            tool_call = msg.tool_calls[0]
+            func_name = tool_call.function.name
+            args = json.loads(tool_call.function.arguments)
+            
+            tool_result = "" # 初始化结果变量
 
-        #把结果给ai
-            messages.append(msg)
-            messages.append({"role":"tool","tool_call_id": tool_call.id,
-            "content": search_result
+            # 🛠️ 分支 A: 查知识库 (参数是 question)
+            if func_name == "lookup_knowledge_base":
+                # 获取参数，防止报错用 .get
+                question_text = args.get("question") 
+                print(f"📝 查找知识库: {question_text}")
+                
+                # 调用 RAG 函数
+                rag_response = query_knowledge_base(question_text)
+                
+                # rag_response 是字典，需要转成字符串给 AI 看
+                tool_result = f"知识库检索结果：{rag_response.get('answer', '未找到相关信息')}"
+
+            # 🔍 分支 B: 搜 Google (参数是 query)
+            elif func_name == "search_google":
+                query_text = args.get("query")
+                print(f"🔎 搜索 Google: {query_text}")
+                
+                # 调用搜索函数
+                tool_result = search_google(query_text)
+
+            # --- 第二轮：把工具结果喂回给 AI 进行总结 ---
+            messages.append(msg) # 添加 AI 的工具调用请求
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": str(tool_result) # 确保内容是字符串
             })
-        #第二次调用ai---总结答案
-            response=client.chat.completions.create(
+
+            # 再次请求 AI 生成最终回复
+            final_response = client.chat.completions.create(
                 model="qwen3-max",
-                messages=messages,
-           
+                messages=messages
             )
-            msg=response.choices[0].message
-        return {"reply": msg.content}
+            return {"reply": final_response.choices[0].message.content}
+
+        # --- 如果不需要工具，直接返回 ---
+        else:
+            return {"reply": msg.content}
+
     except Exception as e:
-        return {"reply": f"出错了: {str(e)}"}
+        print(f"❌ 后端报错详情: {str(e)}") # 这一点很重要，能在终端看到具体错误
+        return {"reply": f"抱歉，客服系统出错了: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn

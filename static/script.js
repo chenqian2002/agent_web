@@ -130,3 +130,75 @@ async function uploadAndAsk() {
         showToast("請求失敗", "error");
     }
 }
+// 切换窗口显示/隐藏
+function toggleChatWidget() {
+    const win = document.getElementById('chat-widget-window');
+    if (win.style.display === 'none' || win.style.display === '') {
+        //是把 win 这个 HTML 元素显示出来，并且让它变成 Flex 布局，方便内部子元素进行灵活排列。
+        win.style.display = 'flex';
+    }else {
+        win.style.display = 'none';
+    }
+}
+// 独立的聊天历史，避免和页面其他功能冲突
+let widgetHistory = [];
+function sendWidgetMessage() {
+    const input = document.getElementById('widget-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    // 1. 显示用户消息
+    addWidgetMsg(msg, 'user');
+    input.value = '';
+
+    // 2. 显示 "思考中"
+    const loadingId = addWidgetMsg('🤖 正在思考...', 'bot');
+
+    // 3. 发送给后端
+    fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            message: msg,
+            history: widgetHistory
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        // 移除加载提示
+        const loadingDiv = document.getElementById(loadingId);
+        if(loadingDiv) loadingDiv.remove();
+
+        // 显示 AI 回复
+        if (data.reply) {
+            addWidgetMsg(data.reply, 'bot');
+            // 更新历史
+            widgetHistory.push({role: 'user', content: msg});
+            widgetHistory.push({role: 'assistant', content: data.reply});
+        } else {
+            addWidgetMsg("⚠️ 服务器未返回有效内容", 'bot');
+        }
+    })
+    .catch(err => {
+        console.error("Fetch 错误:", err);
+        const loadingDiv = document.getElementById(loadingId);
+        if(loadingDiv) loadingDiv.innerText = "❌ 网络连接错误";
+    });
+}
+// 辅助函数：添加消息到 DOM
+function addWidgetMsg(text, role) {
+    const box = document.getElementById('widget-messages');
+    const div = document.createElement('div');
+    const id = 'msg-' + new Date().getTime();
+    div.id = id;
+    div.className = `message ${role}`;
+    div.innerHTML = `<div class="message-content">${text}</div>`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    return id;
+
+}
+// 回车发送
+function handleWidgetKeyPress(e) {
+    if (e.key === 'Enter') sendWidgetMessage();
+}

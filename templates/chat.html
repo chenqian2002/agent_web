@@ -8,12 +8,14 @@
 </head>
 <body>
     <div class="container">
+        <!-- 导航栏 -->
         <nav>
             <div class="logo">🤖 AI Agent</div>
-            <div>
+            <div class="nav-links">
                 <a href="/">首页</a>
                 <a href="/chat">聊天</a>
                 <a href="/docsqa">文件问答</a>
+                <a href="/blogger">文章生成</a>
                 <a href="/about">关于我</a>
             </div>
         </nav>
@@ -34,13 +36,23 @@
             
             <div class="chat-input-box">
                 <input type="text" id="user-input" placeholder="输入你的问题..." onkeypress="handleKeyPress(event)">
-                <button onclick="sendMessage()">发送</button>
+                <button class="send-btn" onclick="sendMessage()">
+                    发送
+                </button>
             </div>
         </div>
         
-        <footer>
-            <p>© 2026 AI Agent 个人网站 | Made with ❤️</p>
-        </footer>
+        <!-- 页脚 -->
+    <footer>
+        <p>© 2026 AI Agent 个人网站 | Made with ❤️</p>
+        <div class="footer-links">
+            <a href="/">首页</a>
+            <a href="/chat">聊天</a>
+            <a href="/docsqa">文件问答</a>
+            <a href="/blogger">文章生成</a>
+            <a href="/about">关于我</a>
+        </div>
+    </footer>
     </div>
     
     <script src="/static/script.js"></script>

@@ -202,3 +202,37 @@ function addWidgetMsg(text, role) {
 function handleWidgetKeyPress(e) {
     if (e.key === 'Enter') sendWidgetMessage();
 }
+
+ // 生成文章的函数
+ async function generateNow() {
+    const topicInput = document.getElementById('topic').value;
+    const topic = topicInput || '今日AI新闻'; // 默认值处理generateNowgenerateNow
+    
+    alert('正在请求生成主题：' + topic + '，请稍候...');
+    
+    try {
+        // 👇 修改这里：加上 /blogger
+        const response = await fetch('/api/blogger/generate', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic: topic })
+        });
+        // 示例：发送 POST 请求给后端 (后端路由是 /api/generate)
+       
+        
+        if (response.ok) {
+            location.reload(); // 生成成功后刷新页面显示新文章
+        } else {
+            alert('生成失败，请检查后台日志');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('请求出错');
+    }
+}
+
+// 查看全文的函数
+function viewFull(id) {
+    // 示例：跳转到详情页
+    window.location.href = '/blogger/article/' + id;
+}

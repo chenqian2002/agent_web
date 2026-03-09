@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<head>
+    <meta charset='UTF-8'>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. 修正：只保留一个标题 -->
+    <title>File generation</title>
+    <link rel='stylesheet' href='/static/style.css'>
+</head>
+<body>
+    
+    <div class='container'>
+        <!-- 导航栏 -->
+        <nav>
+            <div class="logo">🤖 AI Agent</div>
+            <div class="nav-links">
+                <a href="/">首页</a>
+                <a href="/chat">聊天</a>
+                <a href="/docsqa">文件问答</a>
+                <a href="/blogger">文章生成</a>
+                <a href="/about">关于我</a>
+            </div>
+        </nav>
+
+        <div class='card fade-in'>
+            <div class='icon-header'>✍️</div>
+            <h1>文章生成</h1>
+            
+            <!-- 手动触发区 -->
+            <div style='margin:20px 0'>
+                <input id='topic' placeholder='输入主题（默认：今日AI新闻）' class='search-input'>
+                <button onclick='generateNow()' class='search-btn'>🚀 立即生成</button>
+            </div>
+
+            <!-- 文章列表（Jinja2 模板渲染） -->
+            <!-- 2. 修正：优化排版缩进 -->
+            <div id="article-list">
+                {% for article in articles %}
+                <div class='result-box' style='margin:15px 0; text-align:left'>
+                    <h3>{{ article.title }}</h3>
+                    <p style='color:#718096;font-size:13px'>
+                        主题：{{ article.topic }} | {{ article.created_at }}
+                    </p>
+                    <pre style='white-space:pre-wrap'>{{ article.content[:300] }}...</pre>
+                    <!-- 注意：这里传递ID时最好加引号，或者确保ID是数字 -->
+                    <button onclick="viewFull('{{ article.id }}')">查看全文</button>
+                </div>
+                {% else %}
+                <p>暂无文章，点击「立即生成」开始创作！</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 修正：添加缺失的 JavaScript -->
+    <!-- <script>
+        // 生成文章的函数
+        async function generateNow() {
+            const topicInput = document.getElementById('topic').value;
+            const topic = topicInput || '今日AI新闻'; // 默认值处理
+            
+            alert('正在请求生成主题：' + topic + '，请稍候...');
+            
+            try {
+                // 示例：发送 POST 请求给后端 (假设后端路由是 /api/generate)
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic: topic })
+                });
+                
+                if (response.ok) {
+                    location.reload(); // 生成成功后刷新页面显示新文章
+                } else {
+                    alert('生成失败，请检查后台日志');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('请求出错');
+            }
+        }
+
+        // 查看全文的函数
+        function viewFull(id) {
+            // 示例：跳转到详情页
+            window.location.href = '/blogger/article/' + id;
+        }
+        
+    </script> -->
+    <script src="/static/script.js"></script> 
+</body>
+</html>

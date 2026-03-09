@@ -26,13 +26,19 @@ from rag_langchain import get_embeddings
 from langchain_core.documents import Document
 from rag_langchain import ask as query_knowledge_base
 
+from blogger_routes import router as blogger_router
+
+
+
 # 创建 FastAPI 应用
 app= FastAPI(title="My API")
+app.include_router(blogger_router)
 #挂载静态文件
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates=Jinja2Templates(directory="templates")
 
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
+
 
 
 #初始化客户端
@@ -318,7 +324,7 @@ async def chat_api(data: ChatRequest):
     except Exception as e:
         print(f"❌ 后端报错详情: {str(e)}") # 这一点很重要，能在终端看到具体错误
         return {"reply": f"抱歉，客服系统出错了: {str(e)}"}
-
+print(app.routes)
 if __name__ == "__main__":
     import uvicorn
     print("🚀 启动服务器: http://127.0.0.1:8000")

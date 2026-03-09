@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }} - 文章详情</title>
+    <link rel='stylesheet' href='/static/style.css'>
+</head>
+<body>
+    <div class='container'>
+        <nav>
+            <div class="logo">🤖 AI Agent</div>
+            <div class="nav-links">
+                <a href="/blogger">🔙 返回列表</a>
+                <a href="/">首页</a>
+            </div>
+        </nav>
+
+        <div class='card fade-in' style="text-align: left;">
+            <div style="margin-bottom: 20px; text-align: center;">
+                <h1 style="font-size: 2rem;">{{ article.title }}</h1>
+                <p style='color:#718096; margin-top: 10px;'>
+                    📅 {{ article.created_at }} | 🏷️ {{ article.topic }}
+                </p>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+
+            <!-- 文章正文区域 -->
+            <div class="article-content" style="line-height: 1.8; color: #2d3748; font-size: 1.1rem;">
+                <!-- 使用 white-space: pre-wrap 保留 AI 生成的换行符 -->
+                <pre style="white-space: pre-wrap; font-family: sans-serif; background: transparent; padding: 0;">{{ article.content }}</pre>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center;">
+                <button onclick="history.back()" class="search-btn" style="padding: 10px 30px;">返回上一页</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

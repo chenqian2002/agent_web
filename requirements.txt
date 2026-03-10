@@ -12,3 +12,6 @@ langchain
 langchain-openai
 langchain-community
 langchain-chroma
+aiosqlite     # 必须加，你的 blogger_db.py 用到了
+apscheduler   # 必须加，你的 blogger_routes.py 定时任务用到了
+httpx
